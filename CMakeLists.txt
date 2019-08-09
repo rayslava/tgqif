@@ -29,6 +29,9 @@ endif()
 # Boost Requirements
 find_package(Boost 1.70 REQUIRED COMPONENTS system log program_options)
 
+# tdlib
+find_package(Td 1.4.0 REQUIRED)
+
 set(COMMON_SOURCE_FILES
   src/config.cpp
   )
@@ -116,10 +119,14 @@ if (STATIC)
   set(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
   set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -fPIC -fPIE")
+  set(LIBTD_LIBRARIES "Td::TdJsonStatic" "Td::TdStatic")
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
   endif()
+else()
+  set(LIBTD_LIBRARIES "Td::TdJson" "Td::TdStatic")
 endif()
+
 if (SANITIZED)
   set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -fsanitize=address")
 endif()
@@ -165,6 +172,7 @@ include_directories(
 target_link_libraries(
   tgqif
   ${CMAKE_THREAD_LIBS_INIT}
+  ${LIBTD_LIBRARIES}
   ${LIBCXX_LIBRARY}
   ${STATIC_LIBRT}
   ${Boost_LIBRARIES}

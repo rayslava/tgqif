@@ -26,6 +26,7 @@
  * \section compile_sec Compilation
  * \subsection prereq_sec Prerequisites
  * - Boost 1.70
+ * - libtd 1.4.0
  * - C++ compiler with C++20 support (GCC 9.0+, Clang 8+)
  * \subsection comp_build_sec Building
  * For build just use \c make \c release \c JOBS=3
