@@ -13,7 +13,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Copyright (C) Slava Barinov, <rayslava@gmail.com> 2019
+ * Copyright (C) Slava Barinov, <rayslava@gmail.com> 2019-2020
  */
 
 /** \mainpage tgqif
@@ -25,8 +25,8 @@
  *
  * \section compile_sec Compilation
  * \subsection prereq_sec Prerequisites
- * - Boost 1.70
- * - libtd 1.4.0
+ * - Boost >= 1.72
+ * - tgbot-cpp >= 1.2.1
  * - C++ compiler with C++20 support (GCC 9.0+, Clang 8+)
  * \subsection comp_build_sec Building
  * For build just use \c make \c release \c JOBS=3
@@ -96,19 +96,27 @@
  * Existing coverage can be seen at <a href="coverage/index.html">LCOV page</a>
  */
 
+#include <boost/program_options/variables_map.hpp>
+#include <functional>
 #include <iostream>
 #include <filesystem>
+#include <string>
+#include <optional>
+#include <boost/program_options/parsers.hpp>
+#include <boost/program_options/value_semantic.hpp>
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
-#include <td/telegram/td_json_client.h>
+#include "tg.hpp"
 
 #define version_info "tgqif " VERSION " built at " BUILDDATE
 #define usage_info "This program is free software and is destributed under terms of GPLv2"
 
 constexpr std::string_view version_string = version_info;
 constexpr std::string_view info_string = usage_info;
+
+constexpr auto default_config_name {"tgqif.conf"};
 
 namespace po = boost::program_options;
 namespace fs = std::filesystem;
@@ -123,31 +131,42 @@ int main(int argc, char* argv[]) {
   };
 
   po::variables_map vm;
-  fs::path config_file_path;
   bool verbose;
   bool debug;
   try {
-    po::options_description desc("Options");
-    desc.add_options()
+    po::options_description glob("Global options");
+    glob.add_options()
       ("help,h", "Print this help message")
       ("version,v", "Print version information")
-      ("config,c", po::value<fs::path>(&config_file_path)->default_value
-        ("~/.config/tgqif.conf"), "Use config file")
-      ("verbose,V", po::bool_switch(&verbose))
-      ("debug,D", po::bool_switch(&debug))
+      ("verbose,V", po::bool_switch(&verbose), "Enable verbose messages")
+      ("debug,D", po::bool_switch(&debug), "Enable debug messages")
+      ("config,c", po::value<fs::path>()->default_value(default_config_name), "Config file path")
     ;
 
+    po::options_description tgopt("Telegram options");
+    tgopt.add_options()
+      ("name,n", po::value<std::string>(), "Telegram bot name")
+      ("password,p", po::value<std::string>(), "Telegram API hash for bot")
+    ;
+
+    po::options_description cmdline_options;
+    cmdline_options.add(glob).add(tgopt);
+
+    po::options_description config_file_options;
+    config_file_options.add(tgopt);
+
+    // Parse global options
     po::store(po::command_line_parser(argc, argv).
-              options(desc).run(), vm);
+              options(cmdline_options).run(), vm);
     po::notify(vm);
 
     if (vm.count("help")) {
-      std::cout << version_string << std::endl;
+      std::cout << version_info << std::endl;
       std::cout << "Usage: " <<
         fs::path(argv[0]).stem() <<
         " [options]" << std::endl;
-      std::cout << std::endl << desc << std::endl;
-      std::cout << info_string << std::endl;
+      std::cout << std::endl << glob << std::endl << tgopt << std::endl;
+      std::cout << usage_info << std::endl;
       return 0;
     }
 
@@ -155,7 +174,23 @@ int main(int argc, char* argv[]) {
       std::cout << version_string << std::endl;
       return 0;
     }
+
+    // Read environment
+    po::store(po::parse_environment(config_file_options, "TGQIF_"), vm);
+    po::notify(vm);
+
+    // Read config defaults from file
+    if (vm.count("config")) {
+      BOOST_LOG_TRIVIAL(debug) << "Parsing config file";
+      if (fs::exists(vm["config"].as<fs::path>())) {
+        po::store(po::parse_config_file(fs::canonical(vm["config"].as<fs::path>()).c_str(), tgopt), vm);
+        po::notify(vm);
+      } else {
+        BOOST_LOG_TRIVIAL(error) << "Config file does not exists";
+      }
+    }
   }
+
   catch(std::exception& e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
@@ -181,28 +216,5 @@ int main(int argc, char* argv[]) {
       logging::trivial::severity >= logging::trivial::debug
     );
 
-  BOOST_LOG_TRIVIAL(debug) << "Options parsed, parsing config from "
-                           << config_file_path.c_str();
-  // disable TDLib logging
-  td_json_client_execute(nullptr, "{\"@type\":\"setLogVerbosityLevel\", \"new_verbosity_level\":7}");
-
-  void* client = td_json_client_create();
-  // somehow share the client with other threads, which will be able to send requests via td_json_client_send
-
-  const double WAIT_TIMEOUT = 10.0;  // seconds
-  while (true) {
-    const char* result = td_json_client_receive(client, WAIT_TIMEOUT);
-    if (result != nullptr) {
-      // parse the result as JSON object and process it as an incoming update or an answer to a previously sent request
-
-      // if (result is UpdateAuthorizationState with authorizationStateClosed) {
-      //   break;
-      // }
-
-      std::cout << result << std::endl;
-    }
-  }
-
-  td_json_client_destroy(client);
-  return 0;
+  tgbot_main(vm["password"].as<std::string>());
 }

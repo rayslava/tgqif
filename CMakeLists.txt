@@ -16,10 +16,10 @@ find_package (Threads REQUIRED)
 
 if (STATIC)
   message(STATUS "Static build enabled")
-  set(Boost_USE_MULTITHREADED      OFF)
+  set(Boost_USE_MULTITHREADED      ON)
   set(Boost_USE_STATIC_LIBS        ON)
   set(Boost_USE_STATIC_RUNTIME     ON)
-  set(Boost_USE_MULTITHREADED      OFF)
+  set(OPENSSL_USE_STATIC_LIBS      ON)
 else()
   set(Boost_USE_MULTITHREADED      ON)
   message(STATUS "Dynamic build enabled")
@@ -29,11 +29,19 @@ endif()
 # Boost Requirements
 find_package(Boost 1.70 REQUIRED COMPONENTS system log program_options)
 
-# tdlib
-find_package(Td 1.4.0 REQUIRED)
+# tgbot-cpp
+find_library(TgBot_LIBRARIES NAMES libTgBot.a STATIC)
+
+find_package(OpenSSL REQUIRED)
+
+# find_package(CURL)
+# if (CURL_FOUND)
+#     include_directories(${CURL_INCLUDE_DIRS})
+#     add_definitions(-DHAVE_CURL)
+# endif()
 
 set(COMMON_SOURCE_FILES
-  src/config.cpp
+  src/tg.cpp
   )
 
 set(SOURCE_FILES
@@ -72,8 +80,9 @@ macro(create_test name files)
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_BOTH_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
-    ${TOX_LIBRARY}
-    ${SODIUM_LIBRARY}
+    ${TgBot_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${CURL_LIBRARIES}
     ${STATIC_LIBRT}
     )
   add_test(${name} ${name}_tests)
@@ -106,6 +115,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   set(STANDARD "-std=c++2a")
 elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(STANDARD "-std=c++2a")
+  add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 endif()
 
 execute_process(COMMAND git log --pretty=format:\"%h\" -1 OUTPUT_VARIABLE VERSION)
@@ -118,13 +128,12 @@ if (STATIC)
   add_definitions(-DSTATIC)
   set(BUILD_SHARED_LIBS OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
-  set(CMAKE_LD_FLAGS         "${CMAKE_LD_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -fPIE")
-  set(LIBTD_LIBRARIES "Td::TdJsonStatic" "Td::TdStatic")
+  set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -static -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -fPIC -fPIE")
+  # OpenSSL requires zlib but find_package won't detect it
+  set(OPENSSL_LIBRARIES       "${OPENSSL_LIBRARIES} -lz")
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")
   endif()
-else()
-  set(LIBTD_LIBRARIES "Td::TdJson" "Td::TdStatic")
 endif()
 
 if (SANITIZED)
@@ -155,7 +164,7 @@ endif()
 add_executable(tgqif src/main.cpp ${SOURCE_FILES})
 
 if (STATIC)
-  SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+  SET (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed -static")
   SET (STATIC_LIBRT "-lrt")
   set_target_properties(tgqif PROPERTIES LINK_SEARCH_START_STATIC 1)
   set_target_properties(tgqif PROPERTIES LINK_SEARCH_END_STATIC 1)
@@ -172,16 +181,18 @@ include_directories(
 target_link_libraries(
   tgqif
   ${CMAKE_THREAD_LIBS_INIT}
-  ${LIBTD_LIBRARIES}
-  ${LIBCXX_LIBRARY}
-  ${STATIC_LIBRT}
   ${Boost_LIBRARIES}
+  ${LIBCXX_LIBRARY}
+  ${TgBot_LIBRARIES}
+  ${OPENSSL_LIBRARIES}
+  ${CURL_LIBRARIES}
+  ${STATIC_LIBRT}
   )
 
 include(CTest)
 enable_testing()
 
-create_test(config tests/config.cpp)
+create_test(config tests/tg.cpp)
 
 create_test(unit "${all_test_files}")
 
