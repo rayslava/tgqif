@@ -34,6 +34,8 @@ find_library(TgBot_LIBRARIES NAMES libTgBot.a STATIC)
 
 find_package(OpenSSL REQUIRED)
 
+pkg_check_modules(RAPIDJSON REQUIRED RapidJSON>=1.1.0)
+
 # find_package(CURL)
 # if (CURL_FOUND)
 #     include_directories(${CURL_INCLUDE_DIRS})
@@ -42,6 +44,8 @@ find_package(OpenSSL REQUIRED)
 
 set(COMMON_SOURCE_FILES
   src/tg.cpp
+  src/qif.cpp
+  src/json.cpp
   )
 
 set(SOURCE_FILES
@@ -91,6 +95,18 @@ macro(create_test name files)
             PROPERTIES
             COMPILE_DEFINITIONS _UNIT_TEST_BUILD)
 endmacro(create_test)
+
+# Resources for tests
+set(data_SHADOW test.json)
+foreach(item IN LISTS data_SHADOW)
+  message(STATUS "Addind test resource ${item}")
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${item}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/tests/resource/${item}" "${CMAKE_CURRENT_BINARY_DIR}/${item}"
+    DEPENDS "${PROJECT_SOURCE_DIR}/tests/resource/${item}"
+    )
+  add_custom_target(test-resource-${item} ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${item}")
+endforeach()
 
 include(ConfigSafeGuards)
 
@@ -193,6 +209,10 @@ include(CTest)
 enable_testing()
 
 create_test(config tests/tg.cpp)
+
+create_test(qif tests/qif.cpp)
+
+create_test(json tests/json.cpp)
 
 create_test(unit "${all_test_files}")
 

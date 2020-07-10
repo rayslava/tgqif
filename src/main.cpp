@@ -199,22 +199,19 @@ int main(int argc, char* argv[]) {
     std::cerr << "Something really bad happened" << std::endl;
   }
 
-  logging::core::get()->set_filter
-  (
+  logging::core::get()->set_filter (
     logging::trivial::severity >= logging::trivial::warning
-  );
+    );
 
   if (verbose)
-    logging::core::get()->set_filter
-    (
+    logging::core::get()->set_filter (
       logging::trivial::severity >= logging::trivial::info
-    );
+      );
 
   if (debug)
-    logging::core::get()->set_filter
-    (
+    logging::core::get()->set_filter (
       logging::trivial::severity >= logging::trivial::debug
-    );
+      );
 
   tgbot_main(vm["password"].as<std::string>());
 }
