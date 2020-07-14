@@ -107,8 +107,8 @@
 #include <boost/program_options.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include "tg.hpp"
+
+#include "tg/tg.hpp"
 
 #define version_info "tgqif " VERSION " built at " BUILDDATE
 #define usage_info "This program is free software and is destributed under terms of GPLv2"
@@ -199,6 +199,7 @@ int main(int argc, char* argv[]) {
     std::cerr << "Something really bad happened" << std::endl;
   }
 
+  /** TODO: Debug why this won't compile
   logging::core::get()->set_filter (
     logging::trivial::severity >= logging::trivial::warning
     );
@@ -212,6 +213,7 @@ int main(int argc, char* argv[]) {
     logging::core::get()->set_filter (
       logging::trivial::severity >= logging::trivial::debug
       );
+  */
 
   tgbot_main(vm["password"].as<std::string>());
 }

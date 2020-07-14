@@ -1,9 +1,9 @@
-#include "json.hpp"
+#include "json/json.hpp"
 
 #include <gtest/gtest.h>
 
-extern int _argc;
-extern char** _argv;
+int _argc;
+char** _argv;
 
 namespace json {
 
