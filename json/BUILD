@@ -22,4 +22,5 @@ cc_test(
         "@gtest//:gtest_main",
         "//json:json",
     ],
+    data = [ "//json:test.json" ],
 )

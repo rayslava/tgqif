@@ -200,20 +200,20 @@ int main(int argc, char* argv[]) {
   }
 
   /** TODO: Debug why this won't compile
-  logging::core::get()->set_filter (
-    logging::trivial::severity >= logging::trivial::warning
-    );
+     logging::core::get()->set_filter (
+     logging::trivial::severity >= logging::trivial::warning
+     );
 
-  if (verbose)
-    logging::core::get()->set_filter (
+     if (verbose)
+     logging::core::get()->set_filter (
       logging::trivial::severity >= logging::trivial::info
       );
 
-  if (debug)
-    logging::core::get()->set_filter (
+     if (debug)
+     logging::core::get()->set_filter (
       logging::trivial::severity >= logging::trivial::debug
       );
-  */
+   */
 
   tgbot_main(vm["password"].as<std::string>());
 }

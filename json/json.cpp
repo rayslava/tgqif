@@ -46,19 +46,21 @@ namespace json {
     }))
       throw std::runtime_error("Wrong price format in receipt");
     // First we have to cut last two digits which are cents
-    std::span cent_line{std::cend(str) - 2, std::cend(str)};
 
     int cents = 0;
-    if(auto [p, ec] = std::from_chars(cent_line.data(), cent_line.data() + cent_line.size(), cents);
-       ec == std::errc())
-      std::cout << cents;
-
+    {
+      std::span cent_line{std::cend(str) - 2, std::cend(str)};
+      if(auto [p, ec] = std::from_chars(cent_line.data(), cent_line.data() + cent_line.size(), cents);
+         static_cast<bool>(ec))
+        throw std::invalid_argument(str + " is not valid price value");
+    }
     int val = 0;
-    std::span val_line{std::cbegin(str), std::cend(str) - 2};
-    if(auto [p, ec] = std::from_chars(cent_line.data(), cent_line.data() + cent_line.size(), val);
-       ec == std::errc())
-      std::cout << val;
-
+    {
+      std::span val_line{std::cbegin(str), std::cend(str) - 2};
+      if(auto [p, ec] = std::from_chars(val_line.data(), val_line.data() + val_line.size(), val);
+         static_cast<bool>(ec))
+        throw std::invalid_argument(str + " is not valid price value");
+    }
     double result = double(val);
     result += double(cents) / 100;
     return result;

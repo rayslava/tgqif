@@ -9,7 +9,7 @@ cc_library(
         "//tgbot:tgbot",
     ],
     linkstatic = True,
-    copts = COPTS + [ "-v" ],
+    copts = COPTS,
     local_defines = DEFINES,
     linkopts = LINKOPTS,
 )
@@ -19,6 +19,9 @@ cc_test(
     srcs = ["tg_test.cpp"],
     deps = [
         "@gtest//:gtest",
-        "@gtest//:gtest_main"
+        "@gtest//:gtest_main",
     ],
+    copts = COPTS,
+    local_defines = DEFINES,
+    linkopts = LINKOPTS,
 )

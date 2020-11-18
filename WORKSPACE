@@ -68,6 +68,22 @@ http_archive(
    sha256 = "ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46",
 )
 
+http_archive(
+   name = "curl",
+   build_file_content = all_content,
+   strip_prefix = "curl-7.73.0",
+   urls = ["https://curl.haxx.se/download/curl-7.73.0.tar.bz2"],
+   sha256 = "cf34fe0b07b800f1c01a499a6e8b2af548f6d0e044dca4a29d88a4bee146d131",
+)
+
+http_archive(
+   name = "zlib",
+   build_file_content = all_content,
+   strip_prefix = "zlib-1.2.11",
+   urls = ["https://zlib.net/zlib-1.2.11.tar.gz"],
+   sha256 = "c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1",
+)
+
 # Required for compatibility with @boost//:asio_ssl
 new_local_repository(
     name = "openssl",

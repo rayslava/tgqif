@@ -2,9 +2,6 @@
 
 #include <gtest/gtest.h>
 
-int _argc;
-char** _argv;
-
 namespace json {
 
   TEST(json, priceConvert)
@@ -19,7 +16,8 @@ namespace json {
 
   TEST(json, parse)
   {
-    fs::path test_file = fs::canonical(fs::path(_argv[0]).parent_path()) / fs::path("test.json");
+    fs::path test_file = fs::current_path() / "json" / "test.json";
+    std::cout << test_file.c_str();
     JSONReceipt jf(test_file);
     ASSERT_TRUE(jf.isValidReceipt());
   }

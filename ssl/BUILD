@@ -7,4 +7,5 @@ configure_make(
     shared_libraries = ["libssl.so", "libcrypto.so"],
     visibility = ["//visibility:public"],
     configure_command = "config",
+    linkopts = ["-ldl"],
 )
