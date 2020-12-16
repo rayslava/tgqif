@@ -27,8 +27,12 @@ namespace json {
 
 #if defined(_UNIT_TEST_BUILD)
   private:
+    JSONReceipt() :
+      _doc(std::make_unique<rj::Document>())
+    {};
     FRIEND_TEST(json, priceConvert);
     FRIEND_TEST(json, parse);
+    FRIEND_TEST(json, validReceipt);
 #endif
   };
 }

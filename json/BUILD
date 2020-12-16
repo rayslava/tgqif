@@ -4,7 +4,7 @@ cc_library(
     name = "json",
     srcs = ["json.cpp"],
     hdrs = ["json.hpp"],
-    copts = COPTS,
+    copts = COPTS + ["-O0", "-g3", "-ggdb"],
     visibility = ["//main:__pkg__"],
     linkstatic = True,
     deps = [

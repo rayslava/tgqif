@@ -50,14 +50,18 @@ namespace json {
     int cents = 0;
     {
       std::span cent_line{std::cend(str) - 2, std::cend(str)};
-      if(auto [p, ec] = std::from_chars(cent_line.data(), cent_line.data() + cent_line.size(), cents);
+      if(auto [p, ec] = std::from_chars(cent_line.data(),
+                                        cent_line.data() + cent_line.size(),
+                                        cents);
          static_cast<bool>(ec))
         throw std::invalid_argument(str + " is not valid price value");
     }
     int val = 0;
     {
       std::span val_line{std::cbegin(str), std::cend(str) - 2};
-      if(auto [p, ec] = std::from_chars(val_line.data(), val_line.data() + val_line.size(), val);
+      if(auto [p, ec] = std::from_chars(val_line.data(),
+                                        val_line.data() + val_line.size(),
+                                        val);
          static_cast<bool>(ec))
         throw std::invalid_argument(str + " is not valid price value");
     }
