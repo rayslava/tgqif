@@ -46,8 +46,21 @@ namespace json {
   TEST(json, parse)
   {
     fs::path test_file = fs::current_path() / "json" / "test.json";
-    std::cout << test_file.c_str();
     JSONReceipt jf{test_file};
     ASSERT_TRUE(jf.isValidReceipt());
+  }
+
+  TEST(json, items)
+  {
+    fs::path test_file = fs::current_path() / "json" / "test.json";
+    JSONReceipt jf{test_file};
+    std::vector<Item> r;
+    EXPECT_NO_THROW({ r = jf.items();
+                    });
+    ASSERT_EQ(r.size(), 27);
+    ASSERT_STREQ(r[0].name.c_str(), "ХРЕН РУССКИЙ 170Г");
+    ASSERT_EQ(r[0].qty,	  1);
+    ASSERT_EQ(r[0].price, 55.49);
+    ASSERT_EQ(r[0].sum,	  55.49);
   }
 }

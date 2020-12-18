@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <vector>
 #include <rapidjson/document.h>
 
 #if defined(_UNIT_TEST_BUILD)
@@ -14,6 +15,13 @@ namespace rj = rapidjson;
 
 namespace json {
 
+  struct Item {
+    double qty;
+    double price;
+    std::string name;
+    double sum;
+  };
+
   class JSONReceipt {
     std::unique_ptr<rj::Document> _doc;
     void parse(std::ifstream& input);
@@ -24,6 +32,7 @@ namespace json {
     JSONReceipt(const fs::path& file);
     ~JSONReceipt(){};
     bool isValidReceipt() const;
+    std::vector<Item> items() const;
 
 #if defined(_UNIT_TEST_BUILD)
   private:
@@ -35,4 +44,5 @@ namespace json {
     FRIEND_TEST(json, validReceipt);
 #endif
   };
+
 }

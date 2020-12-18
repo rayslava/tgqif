@@ -69,4 +69,23 @@ namespace json {
     result += double(cents) / 100;
     return result;
   }
+
+  std::vector<Item> JSONReceipt::items() const {
+    std::vector<Item> result;
+
+    const rj::Value& items = (*_doc)["document"]["receipt"]["items"];
+
+    for (rj::Value::ConstValueIterator i = items.Begin();
+         i != items.End(); ++i) {
+      double qty = (*i)["quantity"].GetDouble();
+      int price = (*i)["price"].GetInt();
+      int sum = (*i)["sum"].GetInt();
+      std::string name = (*i)["name"].GetString();
+
+      Item newitem{qty, double(price) / 100, name, double(sum) / 100};
+      result.push_back(newitem);
+    }
+
+    return result;
+  }
 }
